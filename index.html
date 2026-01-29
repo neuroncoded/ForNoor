@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>For Noor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    height: 100vh;
+    background: radial-gradient(circle at top, #2a2a40, #0f0f14);
+    font-family: 'Cormorant Garamond', serif;
+    overflow: hidden;
+    color: #f5f5f5;
+  }
+
+  /* ✨ subtle vignette */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+      circle,
+      transparent 60%,
+      rgba(0,0,0,0.4) 85%,
+      rgba(0,0,0,0.65) 100%
+    );
+    pointer-events: none;
+    opacity: 0;
+    animation: vignetteFade 6s ease forwards;
+  }
+
+  @keyframes vignetteFade {
+    to { opacity: 1; }
+  }
+
+  /* 🕯️ gentle candle flicker */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,200,170,0.04), transparent 70%);
+    animation: flicker 8s infinite;
+    pointer-events: none;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 0.08; }
+    50% { opacity: 0.14; }
+  }
+
+  #start {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, #1f1f35, #0f0f14);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    cursor: pointer;
+    transition: opacity 2s ease;
+  }
+
+  #start span {
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+  }
+
+  #hint {
+    margin-top: 14px;
+    font-size: 0.9rem;
+    opacity: 0.5;
+  }
+
+  #scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  #person {
+    position: absolute;
+    bottom: 12%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.4);
+    width: 200px;
+    height: 360px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 220, 200, 0.35),
+      rgba(255, 180, 160, 0.25)
+    );
+    border-radius: 90px 90px 60px 60px;
+    filter: blur(6px);
+    box-shadow: 0 0 60px rgba(255, 180, 160, 0.25);
+    animation: walkIn 6s ease-out forwards, breathe 6s ease-in-out infinite;
+  }
+
+  @keyframes walkIn {
+    to {
+      transform: translateX(-50%) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes breathe {
+    0%, 100% {
+      box-shadow: 0 0 55px rgba(255, 180, 160, 0.25);
+    }
+    50% {
+      box-shadow: 0 0 80px rgba(255, 200, 180, 0.4);
+    }
+  }
+
+  #poemWrapper {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  #poem {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    padding: 0 24px;
+    letter-spacing: 0.05em;
+    transform: translateY(60%);
+  }
+
+  #poem p {
+    opacity: 0;
+    margin-bottom: 28px;
+    font-size: 1.65rem;
+    transform: translateY(20px);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+  }
+
+  #poem p.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 💓 heartbeat only on last line */
+  .heartbeat {
+    animation: heart 1.6s infinite;
+  }
+
+  @keyframes heart {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.05); }
+    40% { transform: scale(1); }
+    60% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+</style>
+</head>
+
+<body>
+
+<div id="start">
+  <span>tap to begin</span>
+  <div id="hint">(sound on)</div>
+</div>
+
+<div id="scene">
+  <div id="person"></div>
+  <div id="poemWrapper">
+    <div id="poem"></div>
+  </div>
+</div>
+
+<audio id="piano" loop preload="auto">
+  <source src="piano.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  const start = document.getElementById("start");
+  const scene = document.getElementById("scene");
+  const piano = document.getElementById("piano");
+  const poem = document.getElementById("poem");
+
+  const poemLines = [
+    "To my angel,",
+    "The thought of you never leaves my mind.",
+    "Your presence never leaves my heart.",
+    "And the hug you first gave my soul never faded away.",
+    "Our memories are always replaying in my head,",
+    "to the point where I find myself smiling into the abyss.",
+    "Every moment we made together has become a core memory,",
+    "one I will forever cherish.",
+    "Whenever we are together, my love, something in me shifts.",
+    "It’s as if my cells rearrange themselves",
+    "just to fit perfectly with yours.",
+    "I love you, Nor Al Hoda Dahle.",
+    "I will always choose you.",
+    "I will always fight for you.",
+    "I will always support you.",
+    "I am here, and I am not going anywhere."
+  ];
+
+  const baseDelay = 200;
+  const lineGap = 900;
+  let lastLine;
+
+  poemLines.forEach((line, i) => {
+    const p = document.createElement("p");
+    p.textContent = line;
+    poem.appendChild(p);
+
+    setTimeout(() => {
+      p.classList.add("visible");
+      if (i === poemLines.length - 1) {
+        lastLine = p;
+        setTimeout(() => lastLine.classList.add("heartbeat"), 800);
+      }
+    }, baseDelay + i * lineGap);
+  });
+
+  function startExperience() {
+    start.style.opacity = 0;
+    start.style.pointerEvents = "none";
+    scene.style.opacity = 1;
+
+    piano.volume = 0;
+    piano.play();
+
+    let v = 0;
+    const fade = setInterval(() => {
+      v += 0.02;
+      piano.volume = Math.min(v, 0.35);
+      if (v >= 0.35) clearInterval(fade);
+    }, 200);
+
+    setTimeout(() => {
+      const poemHeight = poem.offsetHeight;
+      const viewportHeight = window.innerHeight;
+      const centerOffset =
+        poemHeight - viewportHeight / 2;
+
+      poem.animate(
+        [
+          { transform: "translateY(60%)" },
+          { transform: `translateY(-${centerOffset}px)` }
+        ],
+        {
+          duration: 90000,
+          easing: "linear",
+          fill: "forwards"
+        }
+      );
+    }, 3000);
+  }
+
+  start.addEventListener("click", startExperience, { once: true });
+</script>
+
+</body>
+</html>
